@@ -1,0 +1,201 @@
+#include "math.hpp"
+
+#include <algorithm>
+#include <cmath>
+#include <stdexcept>
+
+Vec3 operator+(const Vec3 &lhs, const Vec3 &rhs) {
+    return {lhs.x + rhs.x, lhs.y + rhs.y, lhs.z + rhs.z};
+}
+
+Vec3 operator-(const Vec3 &lhs, const Vec3 &rhs) {
+    return {lhs.x - rhs.x, lhs.y - rhs.y, lhs.z - rhs.z};
+}
+
+Vec3 operator*(const Vec3 &vector, float scalar) {
+    return {vector.x * scalar, vector.y * scalar, vector.z * scalar};
+}
+
+Vec3 operator/(const Vec3 &vector, float scalar) {
+    if (std::abs(scalar) < 1.0e-8F) { throw std::runtime_error("Division by zero"); }
+    return {vector.x / scalar, vector.y / scalar, vector.z / scalar};
+}
+
+float Dot(const Vec3 &lhs, const Vec3 &rhs) {
+    return lhs.x * rhs.x + lhs.y * rhs.y + lhs.z * rhs.z;
+}
+
+Vec3 Cross(const Vec3 &lhs, const Vec3 &rhs) {
+    return {
+        lhs.y * rhs.z - lhs.z * rhs.y,
+        lhs.z * rhs.x - lhs.x * rhs.z,
+        lhs.x * rhs.y - lhs.y * rhs.x,
+    };
+}
+
+float Length(const Vec3 &vector) { return std::sqrt(Dot(vector, vector)); }
+
+Vec3 Normalize(const Vec3 &vector) {
+    const float length = Length(vector);
+    if (length < 1.0e-8F) { return {}; }
+    return vector / length;
+}
+
+float Radians(float degrees) {
+    constexpr float pi = 3.14159265358979323846F;
+    return degrees * pi / 180.0F;
+}
+
+Mat4 Mat4::Identity() {
+    Mat4 result;
+    result.at(0, 0) = 1.0F;
+    result.at(1, 1) = 1.0F;
+    result.at(2, 2) = 1.0F;
+    result.at(3, 3) = 1.0F;
+    return result;
+}
+
+float &Mat4::at(int row, int column) { return values[static_cast<std::size_t>(column * 4 + row)]; }
+
+const float &Mat4::at(int row, int column) const {
+    return values[static_cast<std::size_t>(column * 4 + row)];
+}
+
+const float *Mat4::data() const { return values.data(); }
+
+Mat4 operator*(const Mat4 &lhs, const Mat4 &rhs) {
+    Mat4 result;
+    for (int row = 0; row < 4; ++row) {
+        for (int column = 0; column < 4; ++column) {
+            for (int k = 0; k < 4; ++k) {
+                result.at(row, column) += lhs.at(row, k) * rhs.at(k, column);
+            }
+        }
+    }
+    return result;
+}
+
+Vec3 TransformPoint(const Mat4 &matrix, const Vec3 &point) {
+    const float x = matrix.at(0, 0) * point.x + matrix.at(0, 1) * point.y
+                    + matrix.at(0, 2) * point.z + matrix.at(0, 3);
+    const float y = matrix.at(1, 0) * point.x + matrix.at(1, 1) * point.y
+                    + matrix.at(1, 2) * point.z + matrix.at(1, 3);
+    const float z = matrix.at(2, 0) * point.x + matrix.at(2, 1) * point.y
+                    + matrix.at(2, 2) * point.z + matrix.at(2, 3);
+    const float w = matrix.at(3, 0) * point.x + matrix.at(3, 1) * point.y
+                    + matrix.at(3, 2) * point.z + matrix.at(3, 3);
+    if (std::abs(w) < 1.0e-8F || std::abs(w - 1.0F) < 1.0e-8F) { return {x, y, z}; }
+    return {x / w, y / w, z / w};
+}
+
+Mat4 MakeTranslationMatrix(const Vec3 &translation) {
+    // ===== STUDENT_TASK_BEGIN: part_b_translation_matrix =====
+    return Mat4{};
+    // ===== STUDENT_TASK_END: part_b_translation_matrix =====
+}
+
+Mat4 MakeRotationXMatrix(float radians) {
+    // ===== STUDENT_TASK_BEGIN: part_b_rotation_x_matrix =====
+    return Mat4{};
+    // ===== STUDENT_TASK_END: part_b_rotation_x_matrix =====
+}
+
+Mat4 MakeRotationYMatrix(float radians) {
+    // ===== STUDENT_TASK_BEGIN: part_b_rotation_y_matrix =====
+    return Mat4{};
+    // ===== STUDENT_TASK_END: part_b_rotation_y_matrix =====
+}
+
+Mat4 MakeRotationZMatrix(float radians) {
+    // ===== STUDENT_TASK_BEGIN: part_b_rotation_z_matrix =====
+    return Mat4{};
+    // ===== STUDENT_TASK_END: part_b_rotation_z_matrix =====
+}
+
+Mat4 MakeScaleMatrix(const Vec3 &scale) {
+    // ===== STUDENT_TASK_BEGIN: part_b_scale_matrix =====
+    return Mat4{};
+    // ===== STUDENT_TASK_END: part_b_scale_matrix =====
+}
+
+Quat EulerToQuat(const Vec3 &rotation_degrees) {
+    // ===== STUDENT_TASK_BEGIN: part_b_euler_to_quat =====
+    return Quat{};
+    // ===== STUDENT_TASK_END: part_b_euler_to_quat =====
+}
+
+Quat MakeAxisAngleQuat(const Vec3 &axis, float degrees) {
+    const Vec3 normalized_axis = Normalize(axis);
+    if (Length(normalized_axis) < 1.0e-8F) { return {}; }
+
+    const float half_angle = Radians(degrees) * 0.5F;
+    const float sine = std::sin(half_angle);
+    return QuatNormalize({
+        std::cos(half_angle),
+        normalized_axis.x * sine,
+        normalized_axis.y * sine,
+        normalized_axis.z * sine,
+    });
+}
+
+Quat QuatMultiply(const Quat &lhs, const Quat &rhs) {
+    // ===== STUDENT_TASK_BEGIN: part_b_quat_multiply =====
+    return Quat{};
+    // ===== STUDENT_TASK_END: part_b_quat_multiply =====
+}
+
+Quat QuatNormalize(const Quat &quat) {
+    // ===== STUDENT_TASK_BEGIN: part_b_quat_normalize =====
+    return Quat{};
+    // ===== STUDENT_TASK_END: part_b_quat_normalize =====
+}
+
+Mat4 MakeRotationMatrix(const Quat &quat) {
+    // ===== STUDENT_TASK_BEGIN: part_b_quat_to_matrix =====
+    return Mat4{};
+    // ===== STUDENT_TASK_END: part_b_quat_to_matrix =====
+}
+
+Mat4 ComposeModelMatrixEuler(const Transform &transform) {
+    // ===== STUDENT_TASK_BEGIN: part_b_compose_model_matrix_euler =====
+    return Mat4{};
+    // ===== STUDENT_TASK_END: part_b_compose_model_matrix_euler =====
+}
+
+Mat4 ComposeModelMatrixQuat(const Vec3 &translation, const Quat &rotation, const Vec3 &scale) {
+    // ===== STUDENT_TASK_BEGIN: part_b_compose_model_matrix_quat =====
+    return Mat4{};
+    // ===== STUDENT_TASK_BEGIN: part_b_compose_model_matrix_quat =====
+}
+
+Mat4 MakePerspective(float vertical_fov_radians, float aspect, float near_plane, float far_plane) {
+    Mat4 result;
+    const float focal = 1.0F / std::tan(vertical_fov_radians * 0.5F);
+    result.at(0, 0) = focal / std::max(aspect, 1.0e-6F);
+    result.at(1, 1) = focal;
+    result.at(2, 2) = (far_plane + near_plane) / (near_plane - far_plane);
+    result.at(2, 3) = (2.0F * far_plane * near_plane) / (near_plane - far_plane);
+    result.at(3, 2) = -1.0F;
+    return result;
+}
+
+Mat4 MakeLookAt(const Vec3 &eye, const Vec3 &target, const Vec3 &up) {
+    const Vec3 forward = Normalize(target - eye);
+    const Vec3 right = Normalize(Cross(forward, up));
+    const Vec3 camera_up = Cross(right, forward);
+
+    Mat4 result = Mat4::Identity();
+    result.at(0, 0) = right.x;
+    result.at(0, 1) = right.y;
+    result.at(0, 2) = right.z;
+    result.at(0, 3) = -Dot(right, eye);
+    result.at(1, 0) = camera_up.x;
+    result.at(1, 1) = camera_up.y;
+    result.at(1, 2) = camera_up.z;
+    result.at(1, 3) = -Dot(camera_up, eye);
+    result.at(2, 0) = -forward.x;
+    result.at(2, 1) = -forward.y;
+    result.at(2, 2) = -forward.z;
+    result.at(2, 3) = Dot(forward, eye);
+    return result;
+}

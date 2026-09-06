@@ -1,0 +1,161 @@
+# Environment Setup
+
+## 1 - Prepare Git
+
+Our codebase is hosted in a course Git repository. First, follow the instructions on the [official Git website](https://git-scm.com/) to install Git. After installing Git, use it to clone the repository into a directory of your choice. This will create a directory named `COMP3271_Computer_Graphics`, which will be your directory for all Assignments this semester.
+
+```shell
+git clone https://github.com/HKU-CG/COMP3271_Computer_Graphics.git
+```
+
+## 2 - Prepare a Compiler
+
+Our Assignments require a compiler that supports the C++20 standard. The following compilers are recommended:
+
+- Visual Studio 2022 or later
+- GCC 10 or later
+- Xcode 13 or later
+- Clang 13 or later
+
+Setup instructions per platform:
+
+### Windows
+
+- Download and install [Visual Studio Community](https://visualstudio.microsoft.com); make sure that "Desktop development with C++" is selected during installation.
+
+### macOS
+
+- Install [Xcode](https://developer.apple.com/xcode/) from the App Store, or at least the Command Line Tools. The installation of Homebrew or xmake will prompt you to install the Command Line Tools automatically if they are not present.
+
+### Linux (Ubuntu)
+
+- Install build-essential (this is a meta package that contains the compiler and all the tools we need for compiling C++ projects)
+```shell
+sudo apt install build-essential
+```
+
+## 3 - Prepare xmake
+
+Our Assignments use xmake ([Home](https://xmake.io/)) as the build tool. xmake relies on Git for package management and other core functions, so please make sure that Git is installed. Install xmake using the commands below for your platform; for other installation methods, see the [xmake installation guide](https://xmake.io/#/guide/installation).
+
+### Windows
+
+```shell
+winget install --id Xmake-io.Xmake -e
+```
+
+### macOS
+
+If you do not have Homebrew, install it first:
+
+```shell
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+
+Then install xmake:
+
+```shell
+brew install xmake
+```
+
+### Linux (Ubuntu)
+
+```shell
+sudo apt install xmake
+```
+
+Alternatively, xmake can be installed on any platform with the official script:
+```shell
+curl -fsSL https://xmake.io/shget.text | bash
+```
+
+After installation, run `xmake --version` in a terminal to verify that xmake was installed correctly.
+
+Next, enter the `COMP3271_Computer_Graphics` directory in a terminal (and use this directory for the commands below), then run `xmake`. xmake will automatically detect your platform, download all dependencies (glfw, glad, glm, etc., no manual library installation is needed), and compile and link the project. Note that you may encounter network problems; see the network-related section of the FAQ below.
+
+Then run `xmake run test`. If everything goes smoothly, you will see an interface  displaying a colorful triangle.
+
+![Your first triangle](./asset/test.png)
+
+Congratulations! You have taken your first step into computer graphics: drawing a triangle.
+
+You may encounter problems during compilation. We provide an xmake FAQ for common issues below. If it does not solve your problem, please contact the course teaching assistants for one-on-one help from one of our *unlucky volunteers*.
+
+## 4 - Prepare your IDE
+
+Next, you may want your favorite IDE to recognize the xmake project so that it can provide features such as code completion and debugger integration:
+
+ - Visual Studio:
+    Run `xmake project -a x64 -k vsxmake ./build`.
+    You will find the `.sln` solution file in the `COMP3271_Computer_Graphics/build/vsxmake20xx` directory.
+
+ - Xcode:
+    Run `xmake project -k xcode ./build`.
+    You will find the Xcode project file in the `COMP3271_Computer_Graphics/build/xcode` directory.
+
+ - VS Code (graphical configuration):
+    
+    1. First, run `xmake project -k compile_commands ./.vscode`.
+    2. Install the C/C++ and XMake extensions.
+    3. Select `View -> Command Palette...` from the top menu, enter `XMake:`, and select `XMake: Update Intellisense`.
+    4. Select `View -> Command Palette...` from the top menu, enter `C/C++:`, and select `C/C++: Edit Configurations (UI)`.
+    5. Find `C++ standard` and change it to `C++20`.
+    6. Scroll to the bottom, expand `Advanced Settings`, and enter `${workspaceFolder}/.vscode/compile_commands.json` in the `Compile Commands` field.
+    7. Return to a `.cpp` file. VS Code should now provide code completion and other features.
+    
+ - VS Code (command-line configuration):
+    First, run `xmake project -k compile_commands ./.vscode`.
+    Then create a file named `c_cpp_properties.json` in the `COMP3271_Computer_Graphics/.vscode` directory and add:
+    
+    ```json
+    { "configurations": [ { "name": "Default", "compileCommands": "${workspaceFolder}/.vscode/compile_commands.json" } ], "version": 4 }
+    ```
+    
+    VS Code will then be able to find the `compile_commands.json` generated by the command above and use it to understand the C++ project.
+
+ - NeoVim/Vim (make sure you know how to exit before use)
+
+    1. First, run `xmake project -k compile_commands ./build`.
+    2. Make sure you have installed any LSP for C++ like clangd.
+    3. Set the compile_commands path for your LSP to `./build/`.
+
+## xmake FAQ
+
+- Q. In Windows PowerShell, running `xmake` displays `xmake : The term 'xmake' is not recognized as the name of a cmdlet, function, script file, or operable program`. What should I do?
+- A. Make sure that you installed xmake through PowerShell. If you installed xmake using a downloaded `.exe` installer, configure the environment variables manually according to the instructions on the official website.
+
+- Q. Running `xmake` in the command line displays `note: xmake.lua not found, try generating it`. What should I do?
+- A. Make sure that the current directory in the command line is `COMP3271_Computer_Graphics`. If it is not, use `cd` to switch to the correct path.
+
+- Q. Running `xmake` in the command line reports that the compiler cannot be found, or displays `cannot get program for cxx`. What should I do?
+- A. On each platform, xmake uses that platform's native toolchain by default: Visual Studio on Windows, Xcode on macOS, and GCC on Linux. It will report that the compiler cannot be found if you try to use a different toolchain without configuring it. To use the GCC compiler provided by MSYS2, run the following on Windows:
+  ```shell
+  xmake f -p mingw
+  ```
+  Then repeat the build steps. To use the Clang compiler, run:
+  ```shell
+  xmake f --toolchain=clang
+  ```
+  Then repeat the build steps.
+
+- Q. In Windows PowerShell, running `xmake` says that Visual Studio cannot be found, even though I have installed it. What should I do?
+- A. First, make sure that the Visual Studio installation path does not contain Chinese characters. If it does, reinstall Visual Studio to a different path. Next, open Visual Studio Installer, find `Desktop development with C++`, and check the optional components for `C++/CLI support for v1xx build tools (Latest)`. If it is not selected, install it and try compiling again.
+
+- Q. Multiple compilers are installed on my system. How do I specify which compiler to use?
+
+- A. xmake maintains a global compiler cache. If you have installed a new compiler, run `xmake g -c` to clear the global cache, then run `xmake f -c` in the project directory to detect compilers again. Different compilers have different ways of selecting a specific version. For example, to use Visual Studio 2022:
+  ```shell
+  xmake f --vs=2022
+  ```
+  To use GCC 11:
+  ```shell
+  xmake f --toolchain=gcc-11
+  ```
+
+- Q. I am using macOS, and installation reports `invalid Darwin version number: macos 12.3`.
+
+- A. Your Xcode version is too old. Update Xcode to the latest version.
+
+## Still have problems?
+
+Don't hesitate to seek TA (litzzzhang@connect.hku.hk) for help :)
