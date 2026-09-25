@@ -90,8 +90,6 @@ Vec3 TransformPoint(const Mat4 &matrix, const Vec3 &point) {
 
 Mat4 MakeTranslationMatrix(const Vec3 &translation) {
     // ===== STUDENT_TASK_BEGIN: part_b_translation_matrix =====
-    // Identity with the offset in the last column, so a point (x, y, z, 1)
-    // becomes (x + tx, y + ty, z + tz, 1). Directions (w = 0) are unaffected.
     Mat4 result = Mat4::Identity();
     result.at(0, 3) = translation.x;
     result.at(1, 3) = translation.y;
@@ -102,10 +100,6 @@ Mat4 MakeTranslationMatrix(const Vec3 &translation) {
 
 Mat4 MakeRotationXMatrix(float radians) {
     // ===== STUDENT_TASK_BEGIN: part_b_rotation_x_matrix =====
-    // Rotation about +X (right-handed, counter-clockwise looking down -X):
-    // [1  0   0 ]
-    // [0  c  -s ]   y' = c*y - s*z
-    // [0  s   c ]   z' = s*y + c*z
     const float c = std::cos(radians);
     const float s = std::sin(radians);
     Mat4 result = Mat4::Identity();
@@ -119,11 +113,6 @@ Mat4 MakeRotationXMatrix(float radians) {
 
 Mat4 MakeRotationYMatrix(float radians) {
     // ===== STUDENT_TASK_BEGIN: part_b_rotation_y_matrix =====
-    // Rotation about +Y (up axis). Note the sign pattern differs from X/Z because
-    // the cyclic order is Z -> X, i.e. x' = c*x + s*z and z' = -s*x + c*z:
-    // [ c  0  s ]
-    // [ 0  1  0 ]
-    // [-s  0  c ]
     const float c = std::cos(radians);
     const float s = std::sin(radians);
     Mat4 result = Mat4::Identity();
@@ -137,10 +126,6 @@ Mat4 MakeRotationYMatrix(float radians) {
 
 Mat4 MakeRotationZMatrix(float radians) {
     // ===== STUDENT_TASK_BEGIN: part_b_rotation_z_matrix =====
-    // Rotation about +Z:
-    // [c  -s  0]   x' = c*x - s*y
-    // [s   c  0]   y' = s*x + c*y
-    // [0   0  1]
     const float c = std::cos(radians);
     const float s = std::sin(radians);
     Mat4 result = Mat4::Identity();
@@ -154,7 +139,6 @@ Mat4 MakeRotationZMatrix(float radians) {
 
 Mat4 MakeScaleMatrix(const Vec3 &scale) {
     // ===== STUDENT_TASK_BEGIN: part_b_scale_matrix =====
-    // Scale factors on the diagonal: (x, y, z) -> (sx*x, sy*y, sz*z).
     Mat4 result = Mat4::Identity();
     result.at(0, 0) = scale.x;
     result.at(1, 1) = scale.y;
@@ -165,8 +149,6 @@ Mat4 MakeScaleMatrix(const Vec3 &scale) {
 
 Quat EulerToQuat(const Vec3 &rotation_degrees) {
     // ===== STUDENT_TASK_BEGIN: part_b_euler_to_quat =====
-    // Matches the matrix order Rz * Ry * Rx: build one quaternion per axis and
-    // multiply them in the same order, q = qz * qy * qx (qx is applied first).
     const Quat qx = MakeAxisAngleQuat({1.0F, 0.0F, 0.0F}, rotation_degrees.x);
     const Quat qy = MakeAxisAngleQuat({0.0F, 1.0F, 0.0F}, rotation_degrees.y);
     const Quat qz = MakeAxisAngleQuat({0.0F, 0.0F, 1.0F}, rotation_degrees.z);
@@ -190,8 +172,6 @@ Quat MakeAxisAngleQuat(const Vec3 &axis, float degrees) {
 
 Quat QuatMultiply(const Quat &lhs, const Quat &rhs) {
     // ===== STUDENT_TASK_BEGIN: part_b_quat_multiply =====
-    // Hamilton product lhs * rhs (rhs is applied first when rotating a vector).
-    // With q = (w, v): lhs * rhs = (w1*w2 - v1.v2, w1*v2 + w2*v1 + v1 x v2).
     return {
         lhs.w * rhs.w - lhs.x * rhs.x - lhs.y * rhs.y - lhs.z * rhs.z,
         lhs.w * rhs.x + lhs.x * rhs.w + lhs.y * rhs.z - lhs.z * rhs.y,
@@ -203,8 +183,6 @@ Quat QuatMultiply(const Quat &lhs, const Quat &rhs) {
 
 Quat QuatNormalize(const Quat &quat) {
     // ===== STUDENT_TASK_BEGIN: part_b_quat_normalize =====
-    // Divide by the 4D length so the quaternion represents a pure rotation.
-    // A degenerate (near-zero) quaternion falls back to the identity rotation.
     const float length =
         std::sqrt(quat.w * quat.w + quat.x * quat.x + quat.y * quat.y + quat.z * quat.z);
     if (length < 1.0e-8F) { return {}; }
@@ -214,11 +192,6 @@ Quat QuatNormalize(const Quat &quat) {
 
 Mat4 MakeRotationMatrix(const Quat &quat) {
     // ===== STUDENT_TASK_BEGIN: part_b_quat_to_matrix =====
-    // Standard conversion of a unit quaternion (w, x, y, z) to a 3x3 rotation
-    // matrix, placed in the upper-left block of a homogeneous 4x4 matrix:
-    // [1-2(y2+z2)   2(xy-wz)     2(xz+wy)  ]
-    // [2(xy+wz)     1-2(x2+z2)   2(yz-wx)  ]
-    // [2(xz-wy)     2(yz+wx)     1-2(x2+y2)]
     const Quat q = QuatNormalize(quat);
     const float xx = q.x * q.x;
     const float yy = q.y * q.y;
@@ -246,8 +219,6 @@ Mat4 MakeRotationMatrix(const Quat &quat) {
 
 Mat4 ComposeModelMatrixEuler(const Transform &transform) {
     // ===== STUDENT_TASK_BEGIN: part_b_compose_model_matrix_euler =====
-    // M = T * Rz * Ry * Rx * S. With column vectors the rightmost matrix acts
-    // first: the object is scaled, then rotated about X, Y, Z, then translated.
     const Vec3 &r = transform.rotation_degrees;
     return MakeTranslationMatrix(transform.translation) * MakeRotationZMatrix(Radians(r.z))
            * MakeRotationYMatrix(Radians(r.y)) * MakeRotationXMatrix(Radians(r.x))
@@ -256,16 +227,12 @@ Mat4 ComposeModelMatrixEuler(const Transform &transform) {
 }
 
 Mat4 ComposeModelMatrixQuat(const Transform &transform) {
-    // ===== STUDENT_TASK_BEGIN: part_b_compose_model_matrix_quat_transform =====
-    // Same rotation as the Euler path, since EulerToQuat uses q = qz * qy * qx.
     return ComposeModelMatrixQuat(
         transform.translation, EulerToQuat(transform.rotation_degrees), transform.scale);
-    // ===== STUDENT_TASK_END: part_b_compose_model_matrix_quat_transform =====
 }
 
 Mat4 ComposeModelMatrixQuat(const Vec3 &translation, const Quat &rotation, const Vec3 &scale) {
     // ===== STUDENT_TASK_BEGIN: part_b_compose_model_matrix_quat =====
-    // M = T * Q * S: scale first, then rotate by the quaternion, then translate.
     return MakeTranslationMatrix(translation) * MakeRotationMatrix(rotation)
            * MakeScaleMatrix(scale);
     // ===== STUDENT_TASK_END: part_b_compose_model_matrix_quat =====
