@@ -47,10 +47,37 @@ void DrawTriangles() {
     glColor3d(1.0, 1.0, 1.0);
     glPointSize(5.0F);
     // ===== STUDENT_TASK_BEGIN: part_a_draw_triangles =====
+    // Points of the triangle that is still being collected are drawn in white.
+    glBegin(GL_POINTS);
+    for (int i = 0; i < point_count; ++i) {
+        const auto &point = triangle_to_draw.vertices[static_cast<std::size_t>(i)];
+        glVertex2d(point[0], point[1]);
+    }
+    glEnd();
+
+    // Completed triangles are filled with their palette color.
+    glBegin(GL_TRIANGLES);
+    for (const Triangle &triangle : triangles) {
+        const auto &color = color_array[static_cast<std::size_t>(triangle.color_index)];
+        glColor3d(color[0], color[1], color[2]);
+        for (const auto &vertex : triangle.vertices) { glVertex2d(vertex[0], vertex[1]); }
+    }
+    glEnd();
     // ===== STUDENT_TASK_END: part_a_draw_triangles =====
 }
 
 void MouseInteraction(double m_x, double m_y) {
     // ===== STUDENT_TASK_BEGIN: part_a_mouse_interaction =====
+    // Store the clicked point (already in normalized device coordinates).
+    triangle_to_draw.vertices[static_cast<std::size_t>(point_count)] = {m_x, m_y};
+    ++point_count;
+
+    // Every third point completes a triangle; cycle through the palette colors.
+    if (point_count == 3) {
+        triangle_to_draw.color_index =
+            static_cast<int>(triangles.size() % color_array.size());
+        triangles.push_back(triangle_to_draw);
+        point_count = 0;
+    }
     // ===== STUDENT_TASK_END: part_a_mouse_interaction =====
 }
