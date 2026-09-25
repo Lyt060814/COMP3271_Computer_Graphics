@@ -47,6 +47,7 @@ void DrawTriangles() {
     glColor3d(1.0, 1.0, 1.0);
     glPointSize(5.0F);
     // ===== STUDENT_TASK_BEGIN: part_a_draw_triangles =====
+    // Pending points of the unfinished triangle, in white.
     glBegin(GL_POINTS);
     for (int i = 0; i < point_count; ++i) {
         const auto &point = triangle_to_draw.vertices[static_cast<std::size_t>(i)];
@@ -54,6 +55,7 @@ void DrawTriangles() {
     }
     glEnd();
 
+    // Completed triangles, each in its palette color.
     glBegin(GL_TRIANGLES);
     for (const Triangle &triangle : triangles) {
         const auto &color = color_array[static_cast<std::size_t>(triangle.color_index)];
@@ -69,6 +71,7 @@ void MouseInteraction(double m_x, double m_y) {
     triangle_to_draw.vertices[static_cast<std::size_t>(point_count)] = {m_x, m_y};
     ++point_count;
 
+    // Every third point completes a triangle; colors cycle through the palette.
     if (point_count == 3) {
         triangle_to_draw.color_index =
             static_cast<int>(triangles.size() % color_array.size());

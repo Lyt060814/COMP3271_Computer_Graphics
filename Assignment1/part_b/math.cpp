@@ -90,6 +90,7 @@ Vec3 TransformPoint(const Mat4 &matrix, const Vec3 &point) {
 
 Mat4 MakeTranslationMatrix(const Vec3 &translation) {
     // ===== STUDENT_TASK_BEGIN: part_b_translation_matrix =====
+    // Offset goes in the last column: (x, y, z, 1) -> (x + tx, y + ty, z + tz, 1).
     Mat4 result = Mat4::Identity();
     result.at(0, 3) = translation.x;
     result.at(1, 3) = translation.y;
@@ -100,6 +101,7 @@ Mat4 MakeTranslationMatrix(const Vec3 &translation) {
 
 Mat4 MakeRotationXMatrix(float radians) {
     // ===== STUDENT_TASK_BEGIN: part_b_rotation_x_matrix =====
+    // y' = c*y - s*z, z' = s*y + c*z; x is unchanged.
     const float c = std::cos(radians);
     const float s = std::sin(radians);
     Mat4 result = Mat4::Identity();
@@ -113,6 +115,7 @@ Mat4 MakeRotationXMatrix(float radians) {
 
 Mat4 MakeRotationYMatrix(float radians) {
     // ===== STUDENT_TASK_BEGIN: part_b_rotation_y_matrix =====
+    // x' = c*x + s*z, z' = -s*x + c*z; y is unchanged.
     const float c = std::cos(radians);
     const float s = std::sin(radians);
     Mat4 result = Mat4::Identity();
@@ -126,6 +129,7 @@ Mat4 MakeRotationYMatrix(float radians) {
 
 Mat4 MakeRotationZMatrix(float radians) {
     // ===== STUDENT_TASK_BEGIN: part_b_rotation_z_matrix =====
+    // x' = c*x - s*y, y' = s*x + c*y; z is unchanged.
     const float c = std::cos(radians);
     const float s = std::sin(radians);
     Mat4 result = Mat4::Identity();
@@ -139,6 +143,7 @@ Mat4 MakeRotationZMatrix(float radians) {
 
 Mat4 MakeScaleMatrix(const Vec3 &scale) {
     // ===== STUDENT_TASK_BEGIN: part_b_scale_matrix =====
+    // Scale factors on the diagonal.
     Mat4 result = Mat4::Identity();
     result.at(0, 0) = scale.x;
     result.at(1, 1) = scale.y;
@@ -149,6 +154,7 @@ Mat4 MakeScaleMatrix(const Vec3 &scale) {
 
 Quat EulerToQuat(const Vec3 &rotation_degrees) {
     // ===== STUDENT_TASK_BEGIN: part_b_euler_to_quat =====
+    // q = qz * qy * qx, matching Rz * Ry * Rx (X is applied first).
     const Quat qx = MakeAxisAngleQuat({1.0F, 0.0F, 0.0F}, rotation_degrees.x);
     const Quat qy = MakeAxisAngleQuat({0.0F, 1.0F, 0.0F}, rotation_degrees.y);
     const Quat qz = MakeAxisAngleQuat({0.0F, 0.0F, 1.0F}, rotation_degrees.z);
@@ -172,6 +178,7 @@ Quat MakeAxisAngleQuat(const Vec3 &axis, float degrees) {
 
 Quat QuatMultiply(const Quat &lhs, const Quat &rhs) {
     // ===== STUDENT_TASK_BEGIN: part_b_quat_multiply =====
+    // Hamilton product: (w1*w2 - v1.v2, w1*v2 + w2*v1 + v1 x v2).
     return {
         lhs.w * rhs.w - lhs.x * rhs.x - lhs.y * rhs.y - lhs.z * rhs.z,
         lhs.w * rhs.x + lhs.x * rhs.w + lhs.y * rhs.z - lhs.z * rhs.y,
@@ -183,6 +190,7 @@ Quat QuatMultiply(const Quat &lhs, const Quat &rhs) {
 
 Quat QuatNormalize(const Quat &quat) {
     // ===== STUDENT_TASK_BEGIN: part_b_quat_normalize =====
+    // Unit length so it is a pure rotation; a zero quaternion falls back to identity.
     const float length =
         std::sqrt(quat.w * quat.w + quat.x * quat.x + quat.y * quat.y + quat.z * quat.z);
     if (length < 1.0e-8F) { return {}; }
@@ -192,6 +200,7 @@ Quat QuatNormalize(const Quat &quat) {
 
 Mat4 MakeRotationMatrix(const Quat &quat) {
     // ===== STUDENT_TASK_BEGIN: part_b_quat_to_matrix =====
+    // Standard unit-quaternion to 3x3 rotation, placed in the upper-left block.
     const Quat q = QuatNormalize(quat);
     const float xx = q.x * q.x;
     const float yy = q.y * q.y;
@@ -219,6 +228,7 @@ Mat4 MakeRotationMatrix(const Quat &quat) {
 
 Mat4 ComposeModelMatrixEuler(const Transform &transform) {
     // ===== STUDENT_TASK_BEGIN: part_b_compose_model_matrix_euler =====
+    // M = T * Rz * Ry * Rx * S: scale first, then rotate X, Y, Z, then translate.
     const Vec3 &r = transform.rotation_degrees;
     return MakeTranslationMatrix(transform.translation) * MakeRotationZMatrix(Radians(r.z))
            * MakeRotationYMatrix(Radians(r.y)) * MakeRotationXMatrix(Radians(r.x))
@@ -227,12 +237,14 @@ Mat4 ComposeModelMatrixEuler(const Transform &transform) {
 }
 
 Mat4 ComposeModelMatrixQuat(const Transform &transform) {
+    // Same rotation as the Euler version because EulerToQuat uses qz * qy * qx.
     return ComposeModelMatrixQuat(
         transform.translation, EulerToQuat(transform.rotation_degrees), transform.scale);
 }
 
 Mat4 ComposeModelMatrixQuat(const Vec3 &translation, const Quat &rotation, const Vec3 &scale) {
     // ===== STUDENT_TASK_BEGIN: part_b_compose_model_matrix_quat =====
+    // M = T * Q * S: scale, then rotate, then translate.
     return MakeTranslationMatrix(translation) * MakeRotationMatrix(rotation)
            * MakeScaleMatrix(scale);
     // ===== STUDENT_TASK_END: part_b_compose_model_matrix_quat =====
